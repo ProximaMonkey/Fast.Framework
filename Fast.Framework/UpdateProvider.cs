@@ -196,7 +196,7 @@ namespace Fast.Framework
                 {
                     l.EntityInfos = l.EntityInfos.Select(s =>
                     {
-                        s.IsPrimaryKey = columns.Exists(e => e == s.PropertyName); return s;
+                        s.IsPrimaryKey = columns.Exists(e => e == s.ColumnName); return s;
                     }).ToList();
                     return l;
                 }).ToList();
