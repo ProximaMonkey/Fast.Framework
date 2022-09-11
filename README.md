@@ -609,13 +609,19 @@ public class ProductService
 - 普通事务
 
   ```c#
-                  await db.Ado.BeginTranAsync();//开启事务
-  
-                  await db.Ado.ExecuteNonQueryAsync(CommandType.Text, "执行语句1");
-  
-                  await db.Ado.ExecuteNonQueryAsync(CommandType.Text, "执行语句2");
-  
-                  await db.Ado.CommitTranAsync();//提交事务
+                try
+                {
+                    await db.Ado.BeginTranAsync();//开启事务
+
+                    // 执行 CRUD
+
+                    await db.Ado.CommitTranAsync();//提交事务
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    await db.Ado.RollbackTranAsync();//回滚事务
+                }
   ```
 
 - 更大范围的事务 使用微软 TransactionScope 对象
