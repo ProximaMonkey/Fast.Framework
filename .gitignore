@@ -352,6 +352,6 @@ MigrationBackup/
 # vs for Mac file
 *.DS_Store
 
-# Fast.Framework file
-.Fast.Framework.Debug
-.Fast.Framework.Release
+# Fast.Framework directory
+/Fast.Framework.Debug
+/Fast.Framework.Release
