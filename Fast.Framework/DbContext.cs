@@ -179,7 +179,6 @@ namespace Fast.Framework
                 EntityInfos = dictionary.Select(s => new EntityInfo()
                 {
                     Identity = s.Key,
-                    PropertyName = s.Key,
                     PropertyValue = s.Value,
                     ColumnName = s.Key
                 }).ToList(),
@@ -208,7 +207,6 @@ namespace Fast.Framework
                     EntityInfos = item.Select(s => new EntityInfo()
                     {
                         Identity = $"{s.Key}_{parameterIndex}",
-                        PropertyName = s.Key,
                         PropertyValue = s.Value,
                         ColumnName = s.Key
                     }).ToList(),
@@ -309,7 +307,6 @@ namespace Fast.Framework
                 EntityInfos = dictionary.Select(s => new EntityInfo()
                 {
                     Identity = s.Key,
-                    PropertyName = s.Key,
                     PropertyValue = s.Value,
                     ColumnName = s.Key
                 }).ToList(),
@@ -339,7 +336,6 @@ namespace Fast.Framework
                     EntityInfos = item.Select(s => new EntityInfo()
                     {
                         Identity = $"{s.Key}_{parameterIndex}",
-                        PropertyName = s.Key,
                         PropertyValue = s.Value,
                         ColumnName = s.Key
                     }).ToList(),

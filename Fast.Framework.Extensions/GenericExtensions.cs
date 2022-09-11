@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Fast.Framework.Models;
@@ -14,6 +15,19 @@ namespace Fast.Framework.Extensions
     /// </summary>
     public static class GenericExtensions
     {
+
+        /// <summary>
+        /// 实体信息缓存
+        /// </summary>
+        private readonly static ConcurrentDictionary<string, Lazy<List<EntityInfo>>> entityInfoCache;
+
+        /// <summary>
+        /// 静态构造方法
+        /// </summary>
+        static GenericExtensions()
+        {
+            entityInfoCache = new ConcurrentDictionary<string, Lazy<List<EntityInfo>>>();
+        }
 
         /// <summary>
         /// 获取主键值
@@ -45,29 +59,31 @@ namespace Fast.Framework.Extensions
         /// <returns></returns>
         public static EntityDbMapping GetEntityDbMapping<T>(this T t, int parameterIndex = 0, Func<PropertyInfo, bool> filter = null) where T : class
         {
-            var entityDbMapping = new EntityDbMapping();
             var type = t.GetType();
-            var notMappedAttribute = typeof(NotMappedAttribute);
-            var keyAttribute = typeof(KeyAttribute);
-            var columnAttribute = typeof(ColumnAttribute);
-            var propertyInfos = type.GetProperties().Where(w => !w.IsDefined(notMappedAttribute, false));
-            if (filter != null)
+            var cacheKey = $"{type.FullName}";
+            var entityDbMapping = new EntityDbMapping();
+            entityDbMapping.EntityInfos = entityInfoCache.GetOrAdd(cacheKey, key => new Lazy<List<EntityInfo>>(() =>
             {
-                propertyInfos = propertyInfos.Where(filter);
-            }
-            parameterIndex++;
-            foreach (var item in propertyInfos)
-            {
-                var entityInfo = new EntityInfo()
+                var notMappedAttribute = typeof(NotMappedAttribute);
+                var keyAttribute = typeof(KeyAttribute);
+                var columnAttribute = typeof(ColumnAttribute);
+                var propertyInfos = type.GetProperties().Where(w => !w.IsDefined(notMappedAttribute, false));
+                if (filter != null)
                 {
-                    ProoertyType = item.PropertyType,
-                    PropertyName = item.Name,
-                    PropertyValue = item.GetValue(t),
-                    IsPrimaryKey = item.IsDefined(keyAttribute, false),
-                    ColumnName = item.IsDefined(columnAttribute) ? item.GetCustomAttribute<ColumnAttribute>().Name : item.Name
-                };
+                    propertyInfos = propertyInfos.Where(filter);
+                }
+                return propertyInfos.Select(s => new EntityInfo()
+                {
+                    PropertyInfo = s,
+                    IsPrimaryKey = s.IsDefined(keyAttribute, false),
+                    ColumnName = s.IsDefined(columnAttribute) ? s.GetCustomAttribute<ColumnAttribute>().Name : s.Name
+                }).ToList();
+            })).Value;
+            parameterIndex++;
+            foreach (var entityInfo in entityDbMapping.EntityInfos)
+            {
                 entityInfo.Identity = $"{entityInfo.ColumnName}_{parameterIndex}";
-                entityDbMapping.EntityInfos.Add(entityInfo);
+                entityInfo.PropertyValue = entityInfo.PropertyInfo.GetValue(t);
                 entityDbMapping.DbParameters.Add(entityInfo.Identity, entityInfo.PropertyValue);
             }
             return entityDbMapping;

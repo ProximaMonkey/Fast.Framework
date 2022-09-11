@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Reflection;
+
+
 namespace Fast.Framework.Models
 {
 
@@ -13,14 +16,9 @@ namespace Fast.Framework.Models
         public string Identity { get; set; }
 
         /// <summary>
-        /// 属性类型
+        /// 属性信息
         /// </summary>
-        public Type ProoertyType { get; set; }
-
-        /// <summary>
-        /// 属性名称
-        /// </summary>
-        public string PropertyName { get; set; }
+        public PropertyInfo PropertyInfo { get; set; }
 
         /// <summary>
         /// 属性值
@@ -31,11 +29,6 @@ namespace Fast.Framework.Models
         /// 是否主键
         /// </summary>
         public bool IsPrimaryKey { get; set; }
-
-        /// <summary>
-        /// 是否忽略更新
-        /// </summary>
-        public bool IsIgnoreUpdate { get; set; }
 
         /// <summary>
         /// 列名称
