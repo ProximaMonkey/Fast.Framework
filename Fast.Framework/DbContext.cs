@@ -132,11 +132,7 @@ namespace Fast.Framework
             var insertBuilder = new InsertBuilder(Ado.DbOptions.DbType);
             insertBuilder.TableName = type.GetTableName();
             var keyAuttribute = typeof(KeyAttribute);
-            var entityDbMapping = entity.GetEntityDbMapping(0, p =>
-            {
-                var isDefined = p.IsDefined(keyAuttribute);
-                return !isDefined || isDefined && p.PropertyType.Equals(typeof(string));
-            });
+            var entityDbMapping = entity.GetEntityDbMapping(0, p => !p.IsDefined(keyAuttribute) || p.IsDefined(keyAuttribute) && p.PropertyType.Equals(typeof(string)));
             insertBuilder.EntityDbMapping = entityDbMapping;
             var insertProvider = new InsertProvider<T>(Ado, insertBuilder);
             return insertProvider;
@@ -153,11 +149,7 @@ namespace Fast.Framework
             var insertBuilder = new InsertBuilder(Ado.DbOptions.DbType);
             insertBuilder.TableName = type.GetTableName();
             var keyAuttribute = typeof(KeyAttribute);
-            var entityDbMappings = entitys.GetEntityDbMappings(p =>
-            {
-                var isDefined = p.IsDefined(keyAuttribute);
-                return !isDefined || isDefined && p.PropertyType.Equals(typeof(string));
-            });
+            var entityDbMappings = entitys.GetEntityDbMappings(p => !p.IsDefined(keyAuttribute) || p.IsDefined(keyAuttribute) && p.PropertyType.Equals(typeof(string)));
             insertBuilder.EntityDbMappings = entityDbMappings;
             insertBuilder.IsBatch = true;
             var insertProvider = new InsertProvider<T>(Ado, insertBuilder);

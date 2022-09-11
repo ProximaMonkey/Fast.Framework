@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Fast.Framework.Models;
+
 
 namespace Fast.Framework.Extensions
 {
@@ -57,12 +59,17 @@ namespace Fast.Framework.Extensions
         /// <param name="parameterIndex">参数索引</param>
         /// <param name="filter">过滤</param>
         /// <returns></returns>
-        public static EntityDbMapping GetEntityDbMapping<T>(this T t, int parameterIndex = 0, Func<PropertyInfo, bool> filter = null) where T : class
+        public static EntityDbMapping GetEntityDbMapping<T>(this T t, int parameterIndex = 0, Expression<Func<PropertyInfo, bool>> filter = null) where T : class
         {
             var type = t.GetType();
             var cacheKey = $"{type.FullName}";
+            if (filter != null)
+            {
+                cacheKey += filter.ToString();
+            }
             var entityDbMapping = new EntityDbMapping();
-            entityDbMapping.EntityInfos = entityInfoCache.GetOrAdd(cacheKey, key => new Lazy<List<EntityInfo>>(() =>
+
+            var cache = entityInfoCache.GetOrAdd(cacheKey, key => new Lazy<List<EntityInfo>>(() =>
             {
                 var notMappedAttribute = typeof(NotMappedAttribute);
                 var keyAttribute = typeof(KeyAttribute);
@@ -70,7 +77,7 @@ namespace Fast.Framework.Extensions
                 var propertyInfos = type.GetProperties().Where(w => !w.IsDefined(notMappedAttribute, false));
                 if (filter != null)
                 {
-                    propertyInfos = propertyInfos.Where(filter);
+                    propertyInfos = propertyInfos.Where(filter.Compile());
                 }
                 return propertyInfos.Select(s => new EntityInfo()
                 {
@@ -79,6 +86,15 @@ namespace Fast.Framework.Extensions
                     ColumnName = s.IsDefined(columnAttribute) ? s.GetCustomAttribute<ColumnAttribute>().Name : s.Name
                 }).ToList();
             })).Value;
+
+            entityDbMapping.EntityInfos = cache.Select(s => new EntityInfo()
+            {
+                Identity = s.Identity,
+                PropertyInfo = s.PropertyInfo,
+                IsPrimaryKey = s.IsPrimaryKey,
+                ColumnName = s.ColumnName
+            }).ToList();
+
             parameterIndex++;
             foreach (var entityInfo in entityDbMapping.EntityInfos)
             {
@@ -96,7 +112,7 @@ namespace Fast.Framework.Extensions
         /// <param name="list">对象列表</param>
         /// <param name="filter">过滤</param>
         /// <returns></returns>
-        public static List<EntityDbMapping> GetEntityDbMappings<T>(this IEnumerable<T> list, Func<PropertyInfo, bool> filter = null) where T : class
+        public static List<EntityDbMapping> GetEntityDbMappings<T>(this IEnumerable<T> list, Expression<Func<PropertyInfo, bool>> filter = null) where T : class
         {
             var entityDbMappings = new List<EntityDbMapping>();
             foreach (var item in list)
