@@ -71,37 +71,34 @@ namespace Fast.Framework.Extensions
 
             var cache = entityInfoCache.GetOrAdd(cacheKey, key => new Lazy<List<EntityInfo>>(() =>
             {
-                var notMappedAttribute = typeof(NotMappedAttribute);
-                var keyAttribute = typeof(KeyAttribute);
-                var columnAttribute = typeof(ColumnAttribute);
-                var propertyInfos = type.GetProperties().Where(w => !w.IsDefined(notMappedAttribute, false));
+                var propertyInfos = type.GetProperties().Where(w => !w.IsDefined(typeof(NotMappedAttribute), false));
                 if (filter != null)
                 {
                     propertyInfos = propertyInfos.Where(filter.Compile());
                 }
                 return propertyInfos.Select(s => new EntityInfo()
                 {
-                    PropertyInfo = s,
-                    IsPrimaryKey = s.IsDefined(keyAttribute, false),
-                    ColumnName = s.IsDefined(columnAttribute) ? s.GetCustomAttribute<ColumnAttribute>().Name : s.Name
+                    Property = s,
+                    IsPrimaryKey = s.IsDefined(typeof(KeyAttribute), false),
+                    ColumnName = s.IsDefined(typeof(ColumnAttribute)) ? s.GetCustomAttribute<ColumnAttribute>().Name : s.Name
                 }).ToList();
             })).Value;
 
-            entityDbMapping.EntityInfos = cache.Select(s => new EntityInfo()
+            parameterIndex++;
+
+            entityDbMapping.EntityInfos = cache.Select(s =>
             {
-                Identity = s.Identity,
-                PropertyInfo = s.PropertyInfo,
-                IsPrimaryKey = s.IsPrimaryKey,
-                ColumnName = s.ColumnName
+                var info = new EntityInfo()
+                {
+                    Value = s.Property.GetValue(t),
+                    IsPrimaryKey = s.IsPrimaryKey,
+                    ColumnName = s.ColumnName
+                };
+                info.Identity = $"{info.ColumnName}_{parameterIndex}";
+                entityDbMapping.DbParameters.Add(info.Identity, info.Value);
+                return info;
             }).ToList();
 
-            parameterIndex++;
-            foreach (var entityInfo in entityDbMapping.EntityInfos)
-            {
-                entityInfo.Identity = $"{entityInfo.ColumnName}_{parameterIndex}";
-                entityInfo.PropertyValue = entityInfo.PropertyInfo.GetValue(t);
-                entityDbMapping.DbParameters.Add(entityInfo.Identity, entityInfo.PropertyValue);
-            }
             return entityDbMapping;
         }
 

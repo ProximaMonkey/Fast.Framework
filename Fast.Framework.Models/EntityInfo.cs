@@ -16,14 +16,14 @@ namespace Fast.Framework.Models
         public string Identity { get; set; }
 
         /// <summary>
-        /// 属性信息
+        /// 属性
         /// </summary>
-        public PropertyInfo PropertyInfo { get; set; }
+        public PropertyInfo Property { get; set; }
 
         /// <summary>
-        /// 属性值
+        /// 值
         /// </summary>
-        public object PropertyValue { get; set; }
+        public object Value { get; set; }
 
         /// <summary>
         /// 是否主键
