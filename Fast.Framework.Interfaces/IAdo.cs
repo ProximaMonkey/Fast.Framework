@@ -39,6 +39,12 @@ namespace Fast.Framework.Interfaces
         Task CommitTranAsync();
 
         /// <summary>
+        /// 回滚事务异步
+        /// </summary>
+        /// <returns></returns>
+        Task RollbackTranAsync();
+
+        /// <summary>
         /// 测试连接
         /// </summary>
         /// <returns></returns>

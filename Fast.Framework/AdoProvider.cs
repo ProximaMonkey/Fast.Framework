@@ -85,24 +85,30 @@ namespace Fast.Framework
         /// </summary>
         public async Task CommitTranAsync()
         {
+            await cmd.Transaction.CommitAsync();
+            await conn.CloseAsync();
+        }
+
+        /// <summary>
+        /// 回滚事务异步
+        /// </summary>
+        /// <returns></returns>
+        public async Task RollbackTranAsync()
+        {
             try
-            {
-                await cmd.Transaction.CommitAsync();
-            }
-            catch
             {
                 if (cmd.Transaction != null)
                 {
                     await cmd.Transaction.RollbackAsync();
+                    cmd.Transaction = null;
                 }
-                throw;
             }
             finally
             {
-                cmd.Transaction = null;
                 await conn.CloseAsync();
             }
         }
+
         /// <summary>
         /// 测试连接
         /// </summary>
@@ -190,15 +196,6 @@ namespace Fast.Framework
             {
                 return await cmd.ExecuteNonQueryAsync();
             }
-            catch
-            {
-                if (cmd.Transaction != null)
-                {
-                    mustCloseConnection = true;
-                    await cmd.Transaction.RollbackAsync();
-                }
-                throw;
-            }
             finally
             {
                 cmd.Parameters.Clear();
@@ -223,15 +220,6 @@ namespace Fast.Framework
             try
             {
                 return (await cmd.ExecuteScalarAsync()).ChanageType<T>();
-            }
-            catch
-            {
-                if (cmd.Transaction != null)
-                {
-                    mustCloseConnection = true;
-                    await cmd.Transaction.RollbackAsync();
-                }
-                throw;
             }
             finally
             {
@@ -264,15 +252,6 @@ namespace Fast.Framework
                     return await cmd.ExecuteReaderAsync();
                 }
             }
-            catch
-            {
-                if (cmd.Transaction != null)
-                {
-                    await cmd.Transaction.RollbackAsync();
-                }
-                await conn.CloseAsync();
-                throw;
-            }
             finally
             {
                 cmd.Parameters.Clear();
@@ -296,15 +275,6 @@ namespace Fast.Framework
                 {
                     adapter.SelectCommand = cmd;
                     adapter.Fill(ds);
-                }
-                catch
-                {
-                    if (cmd.Transaction != null)
-                    {
-                        mustCloseConnection = true;
-                        await cmd.Transaction.RollbackAsync();
-                    }
-                    throw;
                 }
                 finally
                 {
