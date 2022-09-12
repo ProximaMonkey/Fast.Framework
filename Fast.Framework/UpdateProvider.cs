@@ -235,14 +235,22 @@ namespace Fast.Framework
             var sql = UpdateBuilder.ToSql();
             if (UpdateBuilder.IsBatch)
             {
-                var result = 0;
-                await ado.BeginTranAsync();
-                foreach (var item in UpdateBuilder.BatchSqls)
+                try
                 {
-                    result += await ado.ExecuteNonQueryAsync(CommandType.Text, item.Sql, ado.CreateParameter(item.DbParameters));
+                    var result = 0;
+                    await ado.BeginTranAsync();
+                    foreach (var item in UpdateBuilder.BatchSqls)
+                    {
+                        result += await ado.ExecuteNonQueryAsync(CommandType.Text, item.Sql, ado.CreateParameter(item.DbParameters));
+                    }
+                    await ado.CommitTranAsync();
+                    return result;
                 }
-                await ado.CommitTranAsync();
-                return result;
+                catch
+                {
+                    await ado.RollbackTranAsync();
+                    throw;
+                }
             }
             else
             {
